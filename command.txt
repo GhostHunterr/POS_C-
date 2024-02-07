@@ -1,0 +1,1 @@
+g++ -Wall -std=c++11 -g -o ms .\main.cpp .\PosApp.cpp .\Perishable.cpp .\NonPerishable.cpp .\Item.cpp .\Date.cpp .\Bill.cpp .\PosIO.cpp .\Error.cpp
