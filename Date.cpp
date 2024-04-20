@@ -232,7 +232,7 @@ namespace sdds
         }
         else if (!err && (d_minute < 0 || d_minute > 59))
         {
-            Error temp("Invlid Minute");
+            Error temp("Invalid Minute");
             err = temp;
         }
     }
