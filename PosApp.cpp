@@ -64,7 +64,7 @@ namespace sdds
 		bool flag;
 
 		cout << "The Convenience Corner" << endl
-			 << "----------------------" << endl;
+			<< "----------------------" << endl;
 		cout << "1- List items" << endl
 			<< "2- Add item" << endl
 			<< "3- Remove item" << endl
@@ -272,12 +272,22 @@ namespace sdds
 	void PosApp::stockItem()
 	{
 		int addQnt = 0;
-		bool flag = true;
+		bool flag = false;
+		int rowNum;
 
 		action("Select an item to stock");
-		int rowNum = selectItem() - 1; // Row number in index
+		rowNum = selectItem() - 1; // Row number in index
 
 		cout << "Selected Item:" << endl;
+
+		//Checking if the Qnt limit is reached.
+		if (Iptr[rowNum]->quantity() == 99)
+		{
+			cout << "\n!!!!! You have reached the MAXIMUM NO. OF QUANTITY (" << MAX_STOCK_NUMBER << ") for the above Product. !!!\n" << endl;
+			return;
+		}
+
+		//If not reached: Change the display type and print the details.
 		Iptr[rowNum]->displayType(POS_FORM);
 		cout << *Iptr[rowNum];
 
@@ -287,21 +297,20 @@ namespace sdds
 			cin >> addQnt;
 			if (cin.fail())
 			{
-				cin.clear();
 				cout << "Invalid Integer, try again: ";
-				flag = false;
+				flag = true;
 			}
 			else if (addQnt < 1 || (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) < addQnt)
 			{
-				cout << "[1<=value<=" << (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) << "], retry: Enter quantity to add: ";
-				flag = false;
+				cout << "[1<=value<=" << (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) << "], retry.\n >> ";
+				flag = true;
 			}
 			else
 			{
-				flag = true;
+				flag = false;
 			}
-			cin.ignore(1000, '\n');
-		} while (!flag);
+			clearInputBuffer();
+		} while (flag);
 
 		Iptr[rowNum]->operator+=(addQnt);
 		Iptr[rowNum]->displayType(POS_LIST);
