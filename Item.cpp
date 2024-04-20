@@ -400,7 +400,7 @@ namespace sdds
             }
         } while (!flag);
 
-        cout << "Quantity" << endl;
+        cout << "Quantity (1<=qnt<=99)" << endl;
         do
         {
             flag = false;

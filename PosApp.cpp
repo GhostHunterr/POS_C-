@@ -8,476 +8,496 @@
 #include "Perishable.h"
 #include "NonPerishable.h"
 #include "Bill.h"
+#include "Utils.h"
 using namespace sdds;
 using namespace std;
 
 namespace sdds
 {
-    void PosApp::action(const char *title) const
-    {
-        cout << ">>>> "
-             << left
-             << setw(72)
-             << setfill('.')
-             << title
-             << endl;
-    }
+	// Constructor
+	PosApp::PosApp(const char* fileName)
+	{
+		empty();
+		if (fileName != nullptr && fileName[0] != '\0')
+		{
+			strcpy(file_name, fileName);
+		}
+	}
 
-    void PosApp::empty()
-    {
-        deallIptr();
-        nptr = 0;
-        file_name[0] = '\0';
-    }
+	PosApp::~PosApp()
+	{
+		deallIptr();
+	}
+	void PosApp::action(const char* title) const
+	{
+		cout << ">>>> "
+			<< left
+			<< setw(72)
+			<< setfill('.')
+			<< title
+			<< endl;
+	}
 
-    void PosApp::deallIptr()
-    {
-        for (int i = 0; i < MAX_NO_ITEMS; i++)
-        {
-            if (Iptr[i] != nullptr)
-            {
-                delete Iptr[i];
-            }
-            Iptr[i] = nullptr;
-        }
-    }
+	void PosApp::empty()
+	{
+		deallIptr();
+		nptr = 0;
+		file_name[0] = '\0';
+	}
 
-    // Constructor
-    PosApp::PosApp(const char *fileName)
-    {
-        empty();
-        if (fileName != nullptr && fileName[0] != '\0')
-        {
-            strcpy(file_name, fileName);
-        }
-    }
+	void PosApp::deallIptr()
+	{
+		for (int i = 0; i < MAX_NO_ITEMS; i++)
+		{
+			if (Iptr[i] != nullptr)
+			{
+				delete Iptr[i];
+			}
+			Iptr[i] = nullptr;
+		}
+	}
 
-    PosApp::~PosApp()
-    {
-        deallIptr();
-    }
+	// Other Functions
+	int PosApp::menu()
+	{
+		int input; // user-input
+		bool flag;
 
-    // Other Functions
-    int PosApp::menu()
-    {
-        int input; // user-input
-        bool flag;
+		cout << "The Sene-Store" << endl;
+		cout << "1- List items" << endl
+			<< "2- Add item" << endl
+			<< "3- Remove item" << endl
+			<< "4- Stock item" << endl
+			<< "5- POS" << endl
+			<< "0- exit program" << endl
+			<< "> ";
+		do
+		{
+			cin >> input;
+			if (cin.fail()) // Checking if the input matches the input variable type
+			{
+				cin.clear(); // clearing Error Flags
+				cout << "Invalid Integer, try again: ";
+				flag = false;
+			}
+			else if (input < 0 || input > 5)
+			{
+				cin.clear(); // clearing Error Flags
+				cout << "[0<=value<=5], retry: > ";
+				flag = false;
+			}
+			else // Valid Input
+			{
+				flag = true;
+			}
+			cin.ignore(1000, '\n'); // Clearing Input Buffer
 
-        cout << "The Sene-Store" << endl;
-        cout << "1- List items" << endl
-             << "2- Add item" << endl
-             << "3- Remove item" << endl
-             << "4- Stock item" << endl
-             << "5- POS" << endl
-             << "0- exit program" << endl
-             << "> ";
-        do
-        {
-            cin >> input;
-            if (cin.fail()) // Checking if the input matches the input variable type
-            {
-                cin.clear(); // clearing Error Flags
-                cout << "Invalid Integer, try again: ";
-                flag = false;
-            }
-            else if (input < 0 || input > 5)
-            {
-                cin.clear(); // clearing Error Flags
-                cout << "[0<=value<=5], retry: > ";
-                flag = false;
-            }
-            else // Valid Input
-            {
-                flag = true;
-            }
-            cin.ignore(1000, '\n'); // Clearing Input Buffer
+		} while (!flag);
 
-        } while (!flag);
+		return input;
+	}
 
-        return input;
-    }
+	void PosApp::run()
+	{
 
-    int PosApp::selectItem()
-    {
-        action("Item Selection by row number");
-        cout << "Press <ENTER> to start....";
-        cin.ignore();
+		bool main_flag = true; // true - keep going : false - exit
 
-        printItems();
-        bool flag = false;
-        int rowNum = -1;
+		loadRecs();
 
-        cout << "Enter the row number: ";
-        do
-        {
-            cin >> rowNum;
-            if (cin.fail())
-            {
-                cin.clear();
-                cout << "Invalid Integer, try again: ";
-                flag = false;
-                cin.ignore(1000, '\n');
-            }
-            else if (rowNum < 1 || rowNum > nptr)
-            {
-                cout << "[1<=value<=" << nptr << "], retry: Enter the row number: ";
-                flag = false;
-                cin.ignore(1000, '\n');
-            }
-            else
-            {
-                flag = true;
-            }
-        } while (!flag);
+		do
+		{
+			// Load the menu
+			int input = menu();
 
-        return rowNum;
-    }
+			// Calling functions based on input
+			switch (input)
+			{
+			case 1:
+				listItems();
+				break;
+			case 2:
+				addItem();
+				break;
+			case 3:
+				removeItem();
+				break;
+			case 4:
+				stockItem();
+				break;
+			case 5:
+				POS();
+				break;
+			case 0:
+				saveRecs();
+				main_flag = false;
+				break;
+			}
 
-    void PosApp::listItems()
-    {
-        double total = printItems();
-        cout << "                               Total Asset: $  |"
-             << setw(14)
-             << setfill(' ')
-             << right
-             << setprecision(2)
-             << total
-             << "|"
-             << left << endl;
-        cout << "-----------------------------------------------^--------------^" << endl
-             << endl;
-    }
+		} while (main_flag);
 
-    void PosApp::addItem()
-    {
-        action("Adding Item to the store");
+		cout << "Goodbye!" << endl;
+	}
 
-        if (nptr == MAX_NO_ITEMS)
-        {
-            cout << "Inventory Full!" << endl;
-        }
-        else
-        {
-            Item *temp = nullptr;
-            char input;
+	int PosApp::selectItem()
+	{
+		action("Item Selection by row number");
+		cout << "Press <ENTER> to start....";
+		cin.ignore();
 
-            cout << "Is the Item perishable? (Y)es/(N)o: ";
-            cin >> input;
-            if (cin.good())
-            {
-                if (toupper(input) == 'Y')
-                {
-                    temp = new Perishable();
-                }
-                else if (toupper(input) == 'N')
-                {
-                    temp = new NonPerishable();
-                }
+		printItems();
+		bool flag = false;
+		int rowNum = -1;
 
-                cin >> *temp;
-            }
-            if (temp)
-            {
-                Iptr[nptr] = temp;
-                Iptr[nptr]->displayType(POS_LIST);
-                action("DONE!");
-                nptr++;
-            }
-        }
-    }
+		cout << "Enter the row number: ";
+		do
+		{
+			cin >> rowNum;
+			if (cin.fail())
+			{
+				cin.clear();
+				cout << "Invalid Integer, try again: ";
+				flag = false;
+				cin.ignore(1000, '\n');
+			}
+			else if (rowNum < 1 || rowNum > nptr)
+			{
+				cout << "[1<=value<=" << nptr << "], retry: Enter the row number: ";
+				flag = false;
+				cin.ignore(1000, '\n');
+			}
+			else
+			{
+				flag = true;
+			}
+		} while (!flag);
 
-    void PosApp::removeItem()
-    {
-        action("Remove Item");
+		return rowNum;
+	}
 
-        int selection = selectItem() - 1;
+	void PosApp::listItems()
+	{
+		double total = printItems();
+		cout << "                               Total Asset: $  |"
+			<< setw(14)
+			<< setfill(' ')
+			<< right
+			<< setprecision(2)
+			<< total
+			<< "|"
+			<< left << endl;
+		cout << "-----------------------------------------------^--------------^" << endl
+			<< endl;
+	}
 
-        cout << "Removing...." << endl;
-        Iptr[selection]->displayType(POS_FORM);
-        cout << *Iptr[selection];
+	void PosApp::addItem()
+	{
+		action("Adding Item to the store");
 
-        delete Iptr[selection];
-        Iptr[selection] = nullptr;
+		if (nptr == MAX_NO_ITEMS)
+		{
+			cout << "Inventory Full!" << endl;
+		}
+		else
+		{
+			Item* temp = nullptr;
+			char input;
+			bool flag = false;
 
-        for (int i = selection; i < nptr; i++)
-        {
-            Iptr[i] = Iptr[i + 1];
-        }
+			cout << "Is the Item perishable? (Y)es/(N)o: ";
+			do
+			{
 
-        nptr--;
+				cin >> input;
+				if (cin.good())
+				{
+					if (toupper(input) == 'Y')
+					{
+						clearInputBuffer();
+						temp = new Perishable();
+						cin >> *temp;
 
-        action("DONE!");
-    }
+					}
+					else if (toupper(input) == 'N')
+					{
+						clearInputBuffer();
+						temp = new NonPerishable();
+						cin >> *temp;
+					}
+					else
+					{
+						flag = true;
+						cout << "Wrong Input!! \nPlease Try again >>";
+					}
+				}
+				else
+				{
+					flag = true;
+				}
+				clearInputBuffer();
 
-    void PosApp::stockItem()
-    {
-        int addQnt = 0;
-        bool flag = true;
+			} while (flag);
 
-        action("Select an item to stock");
-        int rowNum = selectItem() - 1; // Row number in index
+			if (temp)
+			{
+				Iptr[nptr] = temp;
+				Iptr[nptr]->displayType(POS_LIST);
+				action("DONE!");
+				nptr++;
+			}
+		}
+	}
 
-        cout << "Selected Item:" << endl;
-        Iptr[rowNum]->displayType(POS_FORM);
-        cout << *Iptr[rowNum];
+	void PosApp::removeItem()
+	{
+		action("Remove Item");
 
-        cout << "Enter quantity to add: ";
-        do
-        {
-            cin >> addQnt;
-            if (cin.fail())
-            {
-                cin.clear();
-                cout << "Invalid Integer, try again: ";
-                flag = false;
-            }
-            else if (addQnt < 1 || (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) < addQnt)
-            {
-                cout << "[1<=value<=" << (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) << "], retry: Enter quantity to add: ";
-                flag = false;
-            }
-            else
-            {
-                flag = true;
-            }
-            cin.ignore(1000, '\n');
-        } while (!flag);
+		int selection = selectItem() - 1;
 
-        Iptr[rowNum]->operator+=(addQnt);
-        Iptr[rowNum]->displayType(POS_LIST);
+		cout << "Removing...." << endl;
+		Iptr[selection]->displayType(POS_FORM);
+		cout << *Iptr[selection];
 
-        action("DONE!");
-    }
+		delete Iptr[selection];
+		Iptr[selection] = nullptr;
 
-    void PosApp::POS()
-    {
-        // bool flag = true;
-        Bill bTotal;
-        char skuInp[MAX_SKU_LEN];
-        int iFound = -1;
-        bool mainFlag = true;
-        bool flag = false;
+		for (int i = selection; i < nptr; i++)
+		{
+			Iptr[i] = Iptr[i + 1];
+		}
 
-        action("Starting Point of Sale");
+		nptr--;
 
-        do
-        {
-            mainFlag = false;
-            iFound = -1;
-            flag = false;
+		action("DONE!");
+	}
 
-            cout << "Enter SKU or <ENTER> only to end sale..." << endl
-                 << "> ";
-            cin.getline(skuInp, MAX_SKU_LEN, '\n');
-            if (cin.good())
-            {
-                if (skuInp[0] != '\0')
-                {
-                    // Search for the Item
-                    for (int i = 0; i < nptr && !flag; i++)
-                    {
-                        if (Iptr[i]->operator==(skuInp))
-                        {
-                            iFound = i;
-                            flag = true;
-                        }
-                    }
+	void PosApp::stockItem()
+	{
+		int addQnt = 0;
+		bool flag = true;
 
-                    if (flag)
-                    {
-                        Iptr[iFound]->operator-=(1);
-                        Iptr[iFound]->displayType(POS_FORM);
-                        cout << *Iptr[iFound];
-                        Iptr[iFound]->displayType(POS_LIST);
+		action("Select an item to stock");
+		int rowNum = selectItem() - 1; // Row number in index
 
-                        // Adding to the bill
-                        if (Iptr[iFound]->operator bool())
-                        {
-                            bTotal.add(Iptr[iFound]);
-                            cout << endl
-                                 << ">>>>> Added to bill" << endl
-                                 << ">>>>> Total: " << fixed << setprecision(2) << bTotal.total() << endl;
-                        }
-                        else
-                        {
-                            Iptr[iFound]->clear();
-                        }
-                    }
-                    else
-                    {
-                        cout << "!!!!! Item Not Found !!!!!" << endl;
-                    }
-                }
-                else
-                {
-                    mainFlag = true;
-                }
-            }
-            else
-            {
-                cin.ignore(1000, '\n');
-                cout << "SKU too long" << endl;
-                fflush(stdin);
-            }
+		cout << "Selected Item:" << endl;
+		Iptr[rowNum]->displayType(POS_FORM);
+		cout << *Iptr[rowNum];
 
-        } while (!mainFlag);
+		cout << "Enter quantity to add: ";
+		do
+		{
+			cin >> addQnt;
+			if (cin.fail())
+			{
+				cin.clear();
+				cout << "Invalid Integer, try again: ";
+				flag = false;
+			}
+			else if (addQnt < 1 || (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) < addQnt)
+			{
+				cout << "[1<=value<=" << (MAX_STOCK_NUMBER - Iptr[rowNum]->quantity()) << "], retry: Enter quantity to add: ";
+				flag = false;
+			}
+			else
+			{
+				flag = true;
+			}
+			cin.ignore(1000, '\n');
+		} while (!flag);
 
-        bTotal.print(cout);
-    }
+		Iptr[rowNum]->operator+=(addQnt);
+		Iptr[rowNum]->displayType(POS_LIST);
 
-    void PosApp::saveRecs()
-    {
-        action("Saving Data");
+		action("DONE!");
+	}
 
-        ofstream ifs(file_name);
+	void PosApp::POS()
+	{
+		// bool flag = true;
+		Bill bTotal;
+		char skuInp[MAX_SKU_LEN];
+		int iFound = -1;
+		bool mainFlag = true;
+		bool flag = false;
 
-        for (int i = 0; i < nptr; i++)
-        {
-            if (Iptr[i] != nullptr)
-            {
-                ifs << *Iptr[i];
-            }
-        }
-    }
+		action("Starting Point of Sale");
 
-    void PosApp::loadRecs()
-    {
-        action("Loading Items");
-        ifstream ifs(file_name);
+		do
+		{
+			mainFlag = false;
+			iFound = -1;
+			flag = false;
 
-        if (ifs.fail())
-        {
-            ofstream ofs("Output.csv");
-            ofs.close();
-        }
-        else
-        {
-            bool flag = true;
-            deallIptr();
+			cout << "Enter SKU or <ENTER> only to end sale..." << endl
+				<< "> ";
+			cin.getline(skuInp, MAX_SKU_LEN, '\n');
+			if (cin.good())
+			{
+				if (skuInp[0] != '\0')
+				{
+					// Search for the Item
+					for (int i = 0; i < nptr && !flag; i++)
+					{
+						if (Iptr[i]->operator==(skuInp))
+						{
+							iFound = i;
+							flag = true;
+						}
+					}
 
-            while (ifs.good() && nptr < MAX_NO_ITEMS && flag)
-            {
-                char typeOfItem;
-                Item *temp = nullptr;
+					if (flag)
+					{
+						Iptr[iFound]->operator-=(1);
+						Iptr[iFound]->displayType(POS_FORM);
+						cout << *Iptr[iFound];
+						Iptr[iFound]->displayType(POS_LIST);
 
-                ifs >> typeOfItem;
-                ifs.ignore();
+						// Adding to the bill
+						if (Iptr[iFound]->operator bool())
+						{
+							bTotal.add(Iptr[iFound]);
+							cout << endl
+								<< ">>>>> Added to bill" << endl
+								<< ">>>>> Total: " << fixed << setprecision(2) << bTotal.total() << endl;
+						}
+						else
+						{
+							Iptr[iFound]->clear();
+						}
+					}
+					else
+					{
+						cout << "!!!!! Item Not Found !!!!!" << endl;
+					}
+				}
+				else
+				{
+					mainFlag = true;
+				}
+			}
+			else
+			{
+				cin.ignore(1000, '\n');
+				cout << "SKU too long" << endl;
+				fflush(stdin);
+			}
 
-                if (ifs.fail())
-                {
-                    if (ifs.eof())
-                    {
-                        flag = false;
-                    }
-                    else
-                    {
-                        cout << "Invalid Data";
-                    }
-                }
-                else if (typeOfItem == 'P')
-                {
-                    temp = new Perishable();
-                    if (temp->load(ifs))
-                    {
-                        Iptr[nptr] = temp;
-                        Iptr[nptr]->displayType(POS_LIST);
-                        nptr++;
-                    }
-                }
-                else if (typeOfItem == 'N')
-                {
-                    temp = new NonPerishable();
-                    if (temp->load(ifs))
-                    {
-                        Iptr[nptr] = temp;
-                        Iptr[nptr]->displayType(POS_LIST);
-                        nptr++;
-                    }
-                }
-                temp = nullptr;
-            }
-        }
-    }
+		} while (!mainFlag);
 
-    void PosApp::run()
-    {
+		bTotal.print(cout);
+	}
 
-        bool main_flag = true; // true - keep going : false - exit
+	void PosApp::saveRecs()
+	{
+		action("Saving Data");
 
-        loadRecs();
+		ofstream ifs(file_name);
 
-        do
-        {
-            // Load the menu
-            int input = menu();
+		for (int i = 0; i < nptr; i++)
+		{
+			if (Iptr[i] != nullptr)
+			{
+				ifs << *Iptr[i];
+			}
+		}
+	}
 
-            // Calling functions based on input
-            switch (input)
-            {
-            case 1:
-                listItems();
-                break;
-            case 2:
-                addItem();
-                break;
-            case 3:
-                removeItem();
-                break;
-            case 4:
-                stockItem();
-                break;
-            case 5:
-                POS();
-                break;
-            case 0:
-                saveRecs();
-                main_flag = false;
-                break;
-            }
+	void PosApp::loadRecs()
+	{
+		action("Loading Items");
+		ifstream ifs(file_name);
 
-        } while (main_flag);
+		if (ifs.fail())
+		{
+			ofstream ofs("Output.csv");
+			ofs.close();
+		}
+		else
+		{
+			bool flag = true;
+			deallIptr();
 
-        cout << "Goodbye!" << endl;
-    }
+			while (ifs.good() && nptr < MAX_NO_ITEMS && flag)
+			{
+				char typeOfItem;
+				Item* temp = nullptr;
 
-    double PosApp::printItems()
-    {
-        double total = 0;
-        action("Listing Items");
+				ifs >> typeOfItem;
+				ifs.ignore();
 
-        // Sorting
-        for (int turn = 0; turn < nptr - 1; turn++)
-        {
-            for (int j = 0; (j < nptr - 1 - turn); j++)
-            {
+				if (ifs.fail())
+				{
+					if (ifs.eof())
+					{
+						flag = false;
+					}
+					else
+					{
+						cout << "Invalid Data";
+					}
+				}
+				else if (typeOfItem == 'P')
+				{
+					temp = new Perishable();
+					if (temp->load(ifs))
+					{
+						Iptr[nptr] = temp;
+						Iptr[nptr]->displayType(POS_LIST);
+						nptr++;
+					}
+				}
+				else if (typeOfItem == 'N')
+				{
+					temp = new NonPerishable();
+					if (temp->load(ifs))
+					{
+						Iptr[nptr] = temp;
+						Iptr[nptr]->displayType(POS_LIST);
+						nptr++;
+					}
+				}
+				temp = nullptr;
+			}
+		}
+	}
 
-                if (Iptr[j]->operator>(*Iptr[j + 1]))
-                {
-                    Item *temp = nullptr;
-                    temp = Iptr[j];
-                    Iptr[j] = Iptr[j + 1];
-                    Iptr[j + 1] = temp;
-                }
-            }
-        }
+	double PosApp::printItems()
+	{
+		double total = 0;
+		action("Listing Items");
 
-        cout << " Row | SKU    | Item Name          | Price |TX |Qty |   Total | Expiry Date |" << endl
-             << "-----|--------|--------------------|-------|---|----|---------|-------------|" << endl;
-        for (int i = 0; i < nptr; i++)
-        {
-            cout << setw(4)
-                 << right
-                 << setfill(' ')
-                 << i + 1
-                 << " | ";
-            if (Iptr[i] != nullptr)
-            {
-                Iptr[i]->write(cout);
-                total += (Iptr[i]->cost()) * (Iptr[i]->quantity());
-            }
-            cout << endl;
-        }
-        cout << "-----^--------^--------------------^-------^---^----^---------^-------------^" << endl;
-        return total;
-    }
+		// Sorting
+		for (int turn = 0; turn < nptr - 1; turn++)
+		{
+			for (int j = 0; (j < nptr - 1 - turn); j++)
+			{
+
+				if (Iptr[j]->operator>(*Iptr[j + 1]))
+				{
+					Item* temp = nullptr;
+					temp = Iptr[j];
+					Iptr[j] = Iptr[j + 1];
+					Iptr[j + 1] = temp;
+				}
+			}
+		}
+
+		cout << " Row | SKU    | Item Name          | Price |TX |Qty |   Total | Expiry Date |" << endl
+			<< "-----|--------|--------------------|-------|---|----|---------|-------------|" << endl;
+		for (int i = 0; i < nptr; i++)
+		{
+			cout << setw(4)
+				<< right
+				<< setfill(' ')
+				<< i + 1
+				<< " | ";
+			if (Iptr[i] != nullptr)
+			{
+				Iptr[i]->write(cout);
+				total += (Iptr[i]->cost()) * (Iptr[i]->quantity());
+			}
+			cout << endl;
+		}
+		cout << "-----^--------^--------------------^-------^---^----^---------^-------------^" << endl;
+		return total;
+	}
 }
