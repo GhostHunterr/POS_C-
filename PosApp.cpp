@@ -63,7 +63,8 @@ namespace sdds
 		int input; // user-input
 		bool flag;
 
-		cout << "The Sene-Store" << endl;
+		cout << "The Convenience Corner" << endl
+			 << "----------------------" << endl;
 		cout << "1- List items" << endl
 			<< "2- Add item" << endl
 			<< "3- Remove item" << endl
