@@ -154,21 +154,19 @@ namespace sdds
 			cin >> rowNum;
 			if (cin.fail())
 			{
-				cin.clear();
 				cout << "Invalid Integer, try again: ";
 				flag = false;
-				cin.ignore(1000, '\n');
 			}
 			else if (rowNum < 1 || rowNum > nptr)
 			{
 				cout << "[1<=value<=" << nptr << "], retry: Enter the row number: ";
 				flag = false;
-				cin.ignore(1000, '\n');
 			}
 			else
 			{
 				flag = true;
 			}
+			clearInputBuffer();
 		} while (!flag);
 
 		return rowNum;
