@@ -41,7 +41,7 @@ namespace sdds
 
         void run();
 
-        // Defined by me
+        // Other Functions
         double printItems();
     };
 } // namespace sdds

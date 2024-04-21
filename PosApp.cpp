@@ -77,13 +77,11 @@ namespace sdds
 			cin >> input;
 			if (cin.fail()) // Checking if the input matches the input variable type
 			{
-				cin.clear(); // clearing Error Flags
 				cout << "Invalid Integer, try again: ";
 				flag = false;
 			}
 			else if (input < 0 || input > 5)
 			{
-				cin.clear(); // clearing Error Flags
 				cout << "[0<=value<=5], retry: > ";
 				flag = false;
 			}
@@ -91,8 +89,7 @@ namespace sdds
 			{
 				flag = true;
 			}
-			cin.ignore(1000, '\n'); // Clearing Input Buffer
-
+			clearInputBuffer();
 		} while (!flag);
 
 		return input;
@@ -136,7 +133,7 @@ namespace sdds
 
 		} while (main_flag);
 
-		cout << "Goodbye!" << endl;
+		cout << "Sayonara! (Goodbye!)" << endl;
 	}
 
 	int PosApp::selectItem()
@@ -160,7 +157,7 @@ namespace sdds
 			}
 			else if (rowNum < 1 || rowNum > nptr)
 			{
-				cout << "[1<=value<=" << nptr << "], retry: Enter the row number: ";
+				cout << "[1<=value<=" << nptr << "], retry: \n Enter the row number: ";
 				flag = false;
 			}
 			else
@@ -254,7 +251,7 @@ namespace sdds
 
 		cout << "Removing...." << endl;
 		Iptr[selection]->displayType(POS_FORM);
-		cout << *Iptr[selection];
+		cout << (*Iptr[selection]);
 
 		delete Iptr[selection];
 		Iptr[selection] = nullptr;
@@ -312,7 +309,7 @@ namespace sdds
 			clearInputBuffer();
 		} while (flag);
 
-		Iptr[rowNum]->operator+=(addQnt);
+		(*Iptr[rowNum]) += addQnt;
 		Iptr[rowNum]->displayType(POS_LIST);
 
 		action("DONE!");
@@ -320,15 +317,77 @@ namespace sdds
 
 	void PosApp::POS()
 	{
-		// bool flag = true;
 		Bill bTotal;
 		char skuInp[MAX_SKU_LEN];
-		int iFound = -1;
-		bool mainFlag = true;
-		bool flag = false;
+		bool mainFlag = false;
 
 		action("Starting Point of Sale");
 
+
+		cout << "Enter SKU or <ENTER> only to end sale..." << endl << "> ";
+		do
+		{
+			mainFlag = false;
+
+			cin.getline(skuInp, MAX_SKU_LEN);
+
+			//Handling Invalid inputs.
+			if (cin.fail())
+			{
+				clearInputBuffer();
+				cout << "Invalid Input!!! Please Try again.\n >> ";
+				continue;
+			}
+
+			//Ends the Pos.
+			if (strlen(skuInp) == 0)
+			{
+				mainFlag = true;
+				continue;
+			}
+
+			int iFound = -1;
+
+			// Search for the Item
+			for (int i = 0; i < nptr; i++)
+			{
+				if ((*Iptr[i]) == skuInp)
+				{
+					iFound = i;
+					break;
+				}
+			}
+
+			if (iFound != -1)
+			{
+				Item* item = Iptr[iFound];
+
+				if ((*item))
+				{
+					(*item) -= 1;
+					item->displayType(POS_FORM);
+					cout << *item;
+					item->displayType(POS_LIST);
+					bTotal.add(item);
+					cout << endl << ">>>>> Added to bill" << endl;
+					cout << ">>>>> Total: " << fixed << setprecision(2) << bTotal.total() << endl;
+
+				}
+				else
+				{
+					cout << "Item in Error State.\n !!! REMOVE IT IMMEDIATELY. !!!" << endl;
+					item->clear();
+
+				}
+			}
+			else
+			{
+				cout << "!!!!! Item Not Found !!!!!" << endl;
+			}
+
+		} while (!mainFlag);
+
+		/*
 		do
 		{
 			mainFlag = false;
@@ -337,7 +396,7 @@ namespace sdds
 
 			cout << "Enter SKU or <ENTER> only to end sale..." << endl
 				<< "> ";
-			cin.getline(skuInp, MAX_SKU_LEN, '\n');
+			cin.getline(skuInp, MAX_SKU_LEN);
 			if (cin.good())
 			{
 				if (skuInp[0] != '\0')
@@ -345,7 +404,7 @@ namespace sdds
 					// Search for the Item
 					for (int i = 0; i < nptr && !flag; i++)
 					{
-						if (Iptr[i]->operator==(skuInp))
+						if((*Iptr[i]) == skuInp)
 						{
 							iFound = i;
 							flag = true;
@@ -390,6 +449,7 @@ namespace sdds
 			}
 
 		} while (!mainFlag);
+		*/
 
 		bTotal.print(cout);
 	}
@@ -474,6 +534,7 @@ namespace sdds
 		action("Listing Items");
 
 		// Sorting
+
 		for (int turn = 0; turn < nptr - 1; turn++)
 		{
 			for (int j = 0; (j < nptr - 1 - turn); j++)
