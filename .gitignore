@@ -5,3 +5,7 @@
 cmake-build-debug/
 *.exe
 remove.png
+m51_output.txt
+m52_output.txt
+m53_output.txt
+m54_output.txt
