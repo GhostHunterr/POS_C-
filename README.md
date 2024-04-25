@@ -46,4 +46,4 @@ Instructions on how to compile and run the POS system:
 
 ```bash
 g++ *.cpp -std=c++11 -o pos.exe
-./POS
+./pos.exe
